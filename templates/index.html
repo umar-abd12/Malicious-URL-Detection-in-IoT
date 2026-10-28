@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A student-built URL phishing classification prototype using machine learning.">
+  <title>URL Signal — Malicious URL Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="topline"><span class="status-dot"></span> STUDENT RESEARCH PROTOTYPE <span class="topline-right">URL CLASSIFICATION · ML</span></div>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="URL Signal home">
+      <span class="brand-mark"><span></span><span></span><span></span></span>
+      <span>url<span class="brand-light">signal</span></span>
+    </a>
+    <nav><a href="#how-it-works">How it works</a><a href="#limitations">Limitations</a><a class="nav-pill" href="#checker">Check a URL <span>↗</span></a></nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-line"></span> MALICIOUS URL DETECTION IN IoT</p>
+        <h1>Pause before<br>you <em>click.</em></h1>
+        <p class="hero-lede">A machine-learning prototype that looks at URL patterns and estimates whether a link resembles a phishing URL.</p>
+        <div class="hero-meta"><span class="tiny-shield">✓</span> Two models. One clear result. <span class="meta-divider">/</span> Built for academic research.</div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="art-card">
+          <div class="art-card-head"><span class="mini-lock">⌑</span><span>URL ANALYSIS</span><span class="live-dot"></span></div>
+          <div class="fake-url"><span class="url-lock">⌑</span><span>https://</span><b>unknown-domain</b><span>.com/login</span></div>
+          <div class="scan-line"></div>
+          <div class="art-stats"><div><small>MODEL</small><b>XGBoost</b></div><div><small>INPUT</small><b>URL signals</b></div></div>
+          <div class="art-footer"><span class="art-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><span>Pattern analysis preview</span></div>
+        </div>
+        <div class="float-chip chip-top"><span class="chip-icon">↗</span><span><b>URL features</b><small>Structure · length · symbols</small></span></div>
+        <div class="float-chip chip-bottom"><span class="chip-check">✓</span><span><b>Model comparison</b><small>Random Forest + XGBoost</small></span></div>
+      </div>
+    </section>
+
+    <section class="checker-section" id="checker">
+      <div class="section-label"><span>01</span> CHECK A LINK</div>
+      <div class="checker-card">
+        <div class="checker-intro">
+          <div><h2>Inspect a URL</h2><p>Paste a full web address. We’ll classify it using the selected model.</p></div>
+          <span class="form-tag"><span class="status-dot"></span> LOCAL MODEL</span>
+        </div>
+        <form method="post" action="#checker">
+          <label for="url">Website address</label>
+          <div class="input-row">
+            <span class="input-prefix">↗</span>
+            <input id="url" name="url" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="https://example.com/login" value="{{ submitted_url }}" maxlength="2048" required>
+            <button type="submit">Analyse URL <span>→</span></button>
+          </div>
+          <div class="form-bottom">
+            <div class="model-select"><label for="model">MODEL</label><select id="model" name="model"><option value="XGBoost" {% if selected_model == 'XGBoost' %}selected{% endif %}>XGBoost</option><option value="Random Forest" {% if selected_model == 'Random Forest' %}selected{% endif %}>Random Forest</option></select></div>
+            <p><span class="info-icon">i</span> No page is opened or crawled. Only the URL string is analysed.</p>
+          </div>
+        </form>
+
+        {% if error %}
+        <div class="notice error-notice"><strong>Could not analyse this URL</strong><span>{{ error }}</span></div>
+        {% endif %}
+
+        {% if result %}
+        <div class="result-panel {{ result.kind }}">
+          <div class="result-icon">{% if result.kind == 'danger' %}!{% else %}✓{% endif %}</div>
+          <div class="result-main">
+            <div class="result-kicker">MODEL RESULT · {{ result.model }}</div>
+            <h3>{{ result.label }}</h3>
+            <p class="result-url">{{ result.url }}</p>
+            <p class="result-note">{{ result.note }}</p>
+          </div>
+          <div class="result-score"><small>ESTIMATED PHISHING PROBABILITY</small><strong>{{ result.probability }}</strong><span>Model estimate, not a safety guarantee</span></div>
+        </div>
+        {% endif %}
+        {% if load_error and not result %}
+        <div class="notice"><strong>Setup required</strong><span>{{ load_error }}</span></div>
+        {% endif %}
+      </div>
+      <p class="privacy-note"><span>i</span> This prototype does not visit the submitted address. Do not treat a “likely legitimate” result as proof of safety.</p>
+    </section>
+
+    <section class="how-section" id="how-it-works">
+      <div class="section-label"><span>02</span> UNDER THE HOOD</div>
+      <div class="section-heading"><div><h2>A small signal can<br>tell a bigger story.</h2></div><p>The model uses structural clues from the URL—not the page behind it—to make a classification.</p></div>
+      <div class="steps-grid">
+        <article class="step-card"><span class="step-number">01 / INPUT</span><div class="step-visual visual-link">https://<b>domain</b><span>.com/path?id=1</span></div><h3>Read the address</h3><p>The URL is treated as text. The app does not open the site or download its content.</p></article>
+        <article class="step-card"><span class="step-number">02 / FEATURES</span><div class="feature-pills"><span>Length</span><span>HTTPS</span><span>Symbols</span><span>Entropy</span></div><h3>Measure URL patterns</h3><p>Numeric features describe length, characters, path and other URL-level properties.</p></article>
+        <article class="step-card"><span class="step-number">03 / PREDICTION</span><div class="model-stamp"><span>RF</span><span class="stamp-plus">+</span><span>XGB</span></div><h3>Compare classifiers</h3><p>Choose Random Forest or XGBoost and see the model’s classification and estimated score.</p></article>
+      </div>
+    </section>
+
+    <section class="limitations" id="limitations">
+      <div class="limit-icon">i</div>
+      <div><p class="eyebrow">A NOTE ON ACCURACY</p><h2>Helpful signal. Not a guarantee.</h2><p>This is an academic prototype trained on a labelled dataset. URL patterns can change, and a malicious site can use a URL that looks ordinary. The system does not inspect HTML, verify live website reputation, or block IoT traffic. Use independent security checks before trusting a link.</p></div>
+    </section>
+  </main>
+
+  <footer><a class="brand footer-brand" href="/"><span class="brand-mark"><span></span><span></span><span></span></span><span>url<span class="brand-light">signal</span></span></a><span>Malicious URL Detection in IoT · Academic prototype</span><span>Random Forest / XGBoost</span></footer>
+</body>
+</html>
